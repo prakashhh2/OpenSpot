@@ -10,7 +10,7 @@ npx deepspace auth login
 npx deepspace dev start
 ```
 
-Open `http://localhost:8780`. The app uses DeepSpace Auth; no local password database or secret is checked into this repository.
+Open `http://localhost:5173`. The app uses DeepSpace Auth; no local password database or secret is checked into this repository.
 
 Useful checks:
 
