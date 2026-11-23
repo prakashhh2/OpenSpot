@@ -1,4 +1,4 @@
-export const SKILLS = ['React', 'Python', 'Design', 'Product', 'Solana', 'AI'] as const
+export const SKILLS = ['React', 'Python', 'Design', 'Product', 'Solana', 'AI', 'JavaScript', 'TypeScript', 'Node.js', 'Go', 'Rust', 'Docker', 'Kubernetes'] as const
 export const AVAILABILITY = ['Friday evening', 'Saturday morning', 'Saturday afternoon', 'Sunday'] as const
 export const TRACKS = ['AI & data', 'Climate & community', 'Creative tools', 'Open track'] as const
 
@@ -10,8 +10,8 @@ export interface Profile {
   [key: string]: unknown
   userId: string
   displayName: string
-  skills: string
-  availability: string
+  skills: Skill[]
+  availability: Availability[]
   bio: string
 }
 
