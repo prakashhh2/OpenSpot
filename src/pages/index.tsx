@@ -20,7 +20,7 @@ export default function Landing() {
       <div data-testid="static-landing" className="memphis-page min-h-screen overflow-hidden">
         <header className="memphis-header mx-auto flex max-w-7xl items-center justify-between px-6 py-5">
           <Link to="/" className="memphis-logo">{APP_NAME}<span className="text-primary">!</span></Link>
-          <Link to="/home" className="text-sm font-bold text-muted-foreground transition hover:text-foreground">Already joined? Discover <ArrowRight className="ml-1 inline size-3.5" aria-hidden /></Link>
+          <Link to="/dashboard" className="text-sm font-bold text-muted-foreground transition hover:text-foreground">Already joined? Discover <ArrowRight className="ml-1 inline size-3.5" aria-hidden /></Link>
         </header>
 
         <main>
@@ -29,7 +29,7 @@ export default function Landing() {
               <Badge className="memphis-kicker" variant="warning" size="sm">Hack the Lake · Chicago · fictional demo</Badge>
               <h1 className="memphis-heading mt-6 max-w-2xl text-5xl leading-[0.96] tracking-tight md:text-7xl">Find your hackathon teammates.</h1>
               <p className="mt-6 max-w-xl text-lg font-medium leading-8 text-muted-foreground">Join your hackathon, find people whose skills fit your team, and start planning as soon as you team up.</p>
-              <div className="mt-8 flex flex-wrap items-center gap-4"><Link to="/home" className="memphis-button inline-flex h-12 items-center gap-2 rounded-lg bg-primary px-5 text-sm text-primary-foreground">Join the hackathon <ArrowRight className="size-4" aria-hidden /></Link><a href="#how-it-works" className="memphis-outline-button inline-flex h-12 items-center gap-2 rounded-lg px-5 text-sm">See how it works</a></div>
+              <div className="mt-8 flex flex-wrap items-center gap-4"><Link to="/dashboard" className="memphis-button inline-flex h-12 items-center gap-2 rounded-lg bg-primary px-5 text-sm text-primary-foreground">Join the hackathon <ArrowRight className="size-4" aria-hidden /></Link><a href="#how-it-works" className="memphis-outline-button inline-flex h-12 items-center gap-2 rounded-lg px-5 text-sm">See how it works</a></div>
             </div>
             <div aria-label="OpenSpot product preview with four hackathon members" className="memphis-preview relative min-h-[470px] rounded-[2rem] p-5 md:p-8">
               <div className="absolute -right-5 -top-5 hidden rounded-full border-[3px] border-[#18253e] bg-[#ef668c] px-4 py-2 text-xs font-extrabold text-[#18253e] shadow-[4px_4px_0_#18253e] sm:block">A good fit, clearly explained</div>
