@@ -182,10 +182,36 @@ const sendMessage: ActionHandler<Env> = async ({ userId, params, tools }) => {
   })
 }
 
+const removeTeamMember: ActionHandler<Env> = async ({ userId, params, tools }) => {
+  const teamId = text(params.teamId, 100)
+  const memberId = text(params.memberId, 100)
+  if (!teamId || !memberId) return fail('Choose a valid team member.')
+
+  const teamResult = await tools.get<Team>('teams', teamId)
+  if (!teamResult.success) return fail('Team not found.')
+  const team = teamResult.data.record.data
+  if (team.captainId !== userId) return fail('Only the team captain can remove members.')
+  if (memberId === team.captainId) return fail('The team captain cannot be removed.')
+
+  const membership = await one<TeamMember>(tools, 'team_members', { teamId, userId: memberId, status: 'active' })
+  if (!membership) return fail('That participant is not an active member of this team.')
+
+  const pendingInvites = await tools.query<Invite>('invites', { where: { teamId, inviteeId: memberId, status: 'pending' }, limit: 500 })
+  if (!pendingInvites.success) return fail('Could not cancel pending invitations. Please try again.')
+  const canceled = await Promise.all(pendingInvites.data.records.map((invite) => tools.update('invites', invite.recordId, { status: 'declined' })))
+  if (canceled.some((result) => !result.success)) return fail('Could not cancel pending invitations. Please try again.')
+
+  const removed = await tools.remove('team_members', membership.recordId)
+  if (!removed.success) return fail('Could not remove that participant. Please try again.')
+
+  return { success: true, data: { teamId, memberId } }
+}
+
 export const actions: Record<string, ActionHandler<Env>> = {
   saveProfile,
   createTeam,
   sendInvite,
   respondToInvite,
   sendMessage,
+  removeTeamMember,
 }
