@@ -16,8 +16,7 @@
  *   4. Switch to it via `data-theme` on <html> in index.html.
  */
 
-/* Paper — light example theme; shows the full token contract incl.
- * `color-scheme: light`. Replace or delete it once the app has its own. */
+/* Paper — a quiet light alternative for demos. */
 [data-theme="paper"] {
   color-scheme: light;
   --color-background: #ffffff;
@@ -43,4 +42,28 @@
   --shadow-card-hover: 0 2px 8px 0 rgba(0, 0, 0, 0.032);
   --color-shell: #fafafa;
   --color-shell-panel: #ffffff;
+}
+
+[data-theme="slate"] {
+  color-scheme: light;
+  --color-background: #f8f3ea;
+  --color-foreground: #18253e;
+  --color-card: #fffdf8;
+  --color-card-foreground: #18253e;
+  --color-popover: #fffdf8;
+  --color-popover-foreground: #18253e;
+  --color-primary: #ef668c;
+  --color-primary-foreground: #ffffff;
+  --color-secondary: #c9f0ee;
+  --color-secondary-foreground: #18253e;
+  --color-muted: #eee5d8;
+  --color-muted-foreground: #647087;
+  --color-accent: #ffd469;
+  --color-accent-foreground: #18253e;
+  --color-border: #18253e;
+  --color-input: #a9b4c2;
+  --color-ring: #ef668c;
+  --color-shell: #f8f3ea;
+  --color-shell-panel: #fffdf8;
+  --radius: 0.9rem;
 }
