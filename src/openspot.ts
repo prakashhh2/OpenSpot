@@ -10,8 +10,8 @@ export interface Profile {
   [key: string]: unknown
   userId: string
   displayName: string
-  skills: Skill[]
-  availability: Availability[]
+  skills: Skill[] | string
+  availability: Availability[] | string
   bio: string
 }
 
@@ -52,8 +52,9 @@ export interface TeamMessage {
   sentAt: string
 }
 
-export function parseList(value: string | undefined): string[] {
-  if (!value) return []
+export function parseList(value: unknown): string[] {
+  if (Array.isArray(value)) return value.filter((item): item is string => typeof item === 'string')
+  if (typeof value !== 'string' || !value) return []
   try {
     const parsed: unknown = JSON.parse(value)
     return Array.isArray(parsed) ? parsed.filter((item): item is string => typeof item === 'string') : []

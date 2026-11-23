@@ -1,6 +1,6 @@
 # OpenSpot
 
-OpenSpot is a small DeepSpace app for the fictional **Hack the Lake** hackathon. Participants publish a short builder profile, discover teammates by explicit skills and shared availability, create a team, send invites, accept invites into a live roster, and plan in a private team chat.
+OpenSpot is a real-time teammate finder for the fictional **Hack the Lake** hackathon. Participants publish profiles, find builders by skill and availability, form teams, and coordinate in private team chat.
 
 ## Run locally
 
@@ -10,9 +10,7 @@ npx deepspace auth login
 npx deepspace dev start
 ```
 
-Open `http://localhost:5173`. The app uses DeepSpace Auth; no local password database or secret is checked into this repository.
-
-Useful checks:
+Open http://localhost:5173. The CLI sign-in sets up local development. Use the app's sign-in flow to test a participant session.
 
 ```sh
 npm run type-check
@@ -21,48 +19,121 @@ npm run test:unit
 npm run build
 ```
 
-The verified deployment command is `npx deepspace deploy`. Deployment remains intentionally manual: commit first for the default DeepSpace source, then deploy when you are ready.
+To deploy, commit the changes you want to ship and run `npx deepspace deploy`. Open the URL printed by the CLI.
 
-## Demo path
+## Demo with two accounts
 
-1. Sign in as participant A and save a profile with skills and availability.
-2. Open a second signed-in session for participant B and save a different profile.
-3. As A, create a team with a capacity of 2–6, choose a hackathon track, and add the needed tech stack.
-4. From Discover, invite B. The invite appears in B’s Invites tab.
-5. Accept as B. A’s My team roster updates from the `team_members` realtime subscription without a manual refresh.
-6. Open My Team and send a message. Only current members can read or send in that team’s chat.
+1. Sign in as participant A and save a profile. Use a separate browser session to sign in as B and save another profile.
+2. As A, create a team with capacity 2–6, select a track, and list the skills you need.
+3. Invite B from Discover. In B’s **Invites** tab, accept the invitation.
+4. Confirm A’s **My Team** roster updates without a refresh. Send a message and confirm it appears in both sessions.
+5. As A, remove B. Confirm the roster updates and B can no longer access the team chat.
 
-## DeepSpace pieces used
+## Architecture
 
-- DeepSpace Auth provides the verified user session. The server action receives `userId` from that verified JWT; it never trusts a user id from the browser.
-- Record schemas in `src/schemas/openspot-schema.ts` describe SQLite-backed collections and server-enforced RBAC. Public profiles contain only discovery fields; invite rows use `collaboratorsField` plus `read: 'shared'` so only captain and recipient receive them.
-- `useQuery` creates query-based realtime subscriptions. The UI’s profiles, teams, memberships, and invites are live record queries.
-- `src/actions/index.ts` contains the cross-record server actions. `src/server/action-routes.ts` already authenticates them and provides privileged record tools; each action still performs its own ownership and recipient checks because action tools bypass collection RBAC.
-- `team_messages` uses `teamField: 'teamId'` and `read: 'team'` for private access. The `sendMessage` action validates length and current membership before writing; the installed public Messaging feature is intentionally not used because its built-in channels are public.
+```mermaid
+flowchart TD
+    Browser["React client"] -->|Pages, actions, and WebSockets| Worker["Cloudflare App Worker"]
+    Worker -->|Frontend files| Assets["Cloudflare Static Assets"]
+    Worker -->|Auth proxy| Auth["DeepSpace Auth Worker"]
+    Worker -->|Record access and subscriptions| Room["AppRecordRoom Durable Object"]
+    Worker -->|Integration and file proxy| API["DeepSpace API Worker"]
+    Room --> Storage[("SQLite")]
+```
 
-## Record layout and capacity invariant
+React Router renders the public landing page and the signed-in application. The Cloudflare App Worker handles HTTP, auth proxying, server actions, and WebSocket routing. `AppRecordRoom` extends DeepSpace’s `RecordRoom` and handles record storage, queries, permissions, and realtime subscriptions.
 
-- `profiles`: one row per user, keyed by `userId`; skills and availability are JSON strings because DeepSpace columns are typed SQLite `text`/`number` values.
-- `teams`: captain, idea, hackathon track, needed tech stack, and capacity.
-- `team_members`: active roster rows. `uniqueOn: ['userId']` enforces one team per participant at the record layer.
-- `invites`: sender, recipient, status, and a reserved `slot`. Pending invites reserve open slots. `uniqueOn: ['teamId', 'slot', 'status']` rejects two pending claims for the same spot, while the action’s recipient check rejects duplicate pending invites and declined invites can be sent again.
-- `team_messages`: team id, sender, plain text, and timestamp. Team membership is resolved server-side by the RecordRoom `team` permission.
+| Route | Behavior |
+| --- | --- |
+| `/` | Public landing page |
+| `/home` | Redirects to `/dashboard` |
+| `/dashboard` | Protected dashboard for profiles, discovery, teams, invites, and chat |
+| `/settings` | Protected settings |
+| `/api-status` | Protected API status page |
+| Unmatched path | 404 page |
 
-DeepSpace `0.44.2` exposes confirmed CRUD and uniqueness constraints, but no public multi-record transaction primitive in `ActionTools`. OpenSpot therefore makes the important capacity invariant enforceable at individual writes: a pending invite owns a unique team slot before acceptance, and a membership write is unique per user. This prevents two different invitees from taking the same last reserved spot and prevents one participant from joining twice. The action creates the membership before changing the invite status; if the second write fails, the member is still safely on the team and the action reports the stale status explicitly. A future SDK transaction primitive would be the right upgrade for strict all-or-nothing status/membership writes.
+### Startup and authentication
 
-## Scope and tradeoff
+The shared app layout mounts `DeepSpaceAuthProvider`. `AuthBoot` shows a loading state while authentication resolves, then mounts `RecordProvider`, `RecordScope`, navigation, and the route outlet. `AuthGate` guards the protected routes. Signed-out visitors see `AuthOverlay`, and the dashboard mounts after sign-in.
 
-Matching is transparent rather than personalized: predefined skill and availability tags make the reason for a match visible and easy to explain in a live interview. AI matching, notifications, multiple events, and organizer dashboards are intentionally outside this version.
+The App Worker proxies requests under `/api/auth/*` to DeepSpace Auth. Social sign-in starts at `GET /api/auth/social-redirect`. The browser returns to `GET /api/auth/oauth-complete`, where the Worker exchanges the authorization code, sets an HttpOnly session cookie, and redirects back into the app. Sign-out uses `/api/auth/sign-out`.
 
-## Internship writeup draft
+### Realtime reads and server actions
 
-> I built OpenSpot, a real-time hackathon teammate finder for Hack the Lake. Participants create profiles with explicit skills and availability, discover complementary builders, create teams, send invites, and accept invitations into a live roster. I used DeepSpace Auth for identity, SQLite-backed RecordRoom collections for persistent state, server-enforced collection permissions, query-based realtime subscriptions, and server actions for validated cross-record workflows. The main product tradeoff was transparent tag-based matching instead of a personalized AI matcher, which kept the demo explainable and the data model small. The agent implemented the initial UI, schemas, server actions, tests, and documentation. **What I personally verified:** _replace this placeholder after testing the deployed app with two signed-in accounts._
+```mermaid
+sequenceDiagram
+    participant UI as React client
+    participant W as App Worker
+    participant R as RecordRoom
+    participant DB as SQLite
+    UI->>W: Subscribe over /ws/:roomId
+    W->>R: Forward room request
+    R->>DB: Query records
+    DB-->>R: Initial records
+    R-->>UI: Send permitted records over WebSocket
+    UI->>W: POST /api/actions/:name
+    W->>W: Verify JWT and run action
+    W->>R: Read or write records
+    R->>DB: Apply record operation
+    R-->>W: Record result
+    W-->>UI: JSON action result
+    R-->>UI: Push updates to matching subscriptions
+```
 
-## Personal verification checklist
+The main room is scoped as `app:<DEEPSPACE_APP_ID>`. The dashboard calls `useAuthProfileReady` and uses `useQuery` to load profiles, teams, active memberships, and visible invites. Discover combines these records to show candidates. My Team uses profiles and memberships for the roster and subscribes to the current team’s chat messages. The Invites tab shows incoming and outgoing requests.
 
-- [ ] Sign in with two separate accounts.
-- [ ] Save and reload both profiles; confirm the other profile is discoverable.
-- [ ] Create a team and invite the second account.
-- [ ] Accept from the recipient account and confirm the captain’s roster updates live.
-- [ ] Try accepting as the wrong account, accepting twice, and taking the last spot concurrently.
-- [ ] Run the deployed URL and confirm auth, filters, invite statuses, and error messages.
+The UI calls `callAction(name, params)` from `src/lib/actions.ts`. The action endpoint uses the verified JWT to determine the caller’s `userId`. Handlers in `src/actions/index.ts` validate the input and use DeepSpace’s privileged record tools for cross-record operations.
+
+| Action | Behavior |
+| --- | --- |
+| `saveProfile` | Validates skills and availability, then creates or updates the caller’s profile. |
+| `createTeam` | Validates team details and capacity, checks for an active membership, then creates the team and adds its captain in slot 0. |
+| `sendInvite` | Checks captain ownership, recipient eligibility, and existing reservations, then creates a pending invite for an open slot. |
+| `respondToInvite` | Checks that the caller is the recipient of a pending invite. Acceptance checks capacity and slot availability, creates a membership, and marks the invite accepted. Declining updates the invite status. |
+| `removeTeamMember` | Checks captain ownership and the target’s active membership, cancels applicable pending invites, and removes the member from the roster. |
+| `sendMessage` | Checks the message length and active membership, then saves the message with the verified sender and a timestamp. |
+
+## Data and permissions
+
+| Collection | Contents and access |
+| --- | --- |
+| `profiles` | One discovery profile per user, keyed by `userId`. Skills and availability are stored as JSON strings. |
+| `teams` | Team name, project idea, track, needed skills, capacity, and captain. |
+| `team_members` | Team ID, user ID, slot, and status. `uniqueOn: ['userId']` enforces one membership per user. |
+| `invites` | Team, captain, recipient, participants, slot, status, and timestamp. `collaboratorsField` and `read: 'shared'` restrict reads to the captain and recipient. |
+| `team_messages` | Team ID, sender, text, and timestamp. `teamField: 'teamId'` and `read: 'team'` restrict reads to team members. The send action checks active membership before writing. |
+
+`AuthGate` controls access to protected screens. The Worker verifies bearer JWTs for server actions, and RecordRoom enforces collection permissions on ordinary record access. Because action tools bypass collection permissions, the handlers explicitly check ownership, invite recipients, and team membership.
+
+### Capacity and partial writes
+
+Pending invites reserve slots before acceptance. The invite constraint `uniqueOn: ['teamId', 'slot', 'status']` permits only one pending reservation per team slot. The same constraint also covers historical statuses. If an older invite with the same team, slot, and target status is retained, a later status update can collide when that slot is reused.
+
+In DeepSpace 0.44.2, the action tools used here expose individual writes. Accepting an invite creates the membership before updating the invite status. If the status write fails, the membership can already exist and the invite can still show as pending. The action reports that partial result.
+
+## Project files
+
+| File | Responsibility |
+| --- | --- |
+| [worker.ts](worker.ts) | Worker entry point and Durable Object exports |
+| [src/server/http-routes.ts](src/server/http-routes.ts) | Static assets, frontend route fallback, and 404 handling |
+| [src/server/action-routes.ts](src/server/action-routes.ts) | Authenticated action endpoint |
+| [src/schemas.ts](src/schemas.ts) and [src/schemas/openspot-schema.ts](src/schemas/openspot-schema.ts) | Collection definitions and permissions |
+| [src/components/Navigation.tsx](src/components/Navigation.tsx) | Navigation and sign-in controls |
+| [src/pages](src/pages) | Public pages, shared app layout, and protected routes |
+
+The Worker applies CORS and cron arming middleware before dispatching requests to auth, realtime, server action, agent/MCP, and platform proxy routes. Static assets and frontend fallback handling come afterward.
+
+## Scope
+
+OpenSpot supports one shared hackathon. Matching uses predefined skill and availability tags so participants can see why a match fits. Multiple events would require an event model and event-scoped queries and permissions. AI matching, notifications, and organizer dashboards are outside this version.
+
+## Verification checklist
+
+- [ ] Save and reload profiles in two separate signed-in sessions.
+- [ ] Verify discovery filters and invite visibility for the captain and recipient.
+- [ ] Accept an invite and confirm the roster updates live.
+- [ ] Check wrong-recipient, repeat-acceptance, and concurrent last-slot cases.
+- [ ] Reuse a slot after a decline or removal and check the resulting invite status.
+- [ ] Remove a member and confirm their chat access is revoked.
+- [ ] Test sign-in, a direct dashboard visit, and a dashboard refresh on the deployed URL.
