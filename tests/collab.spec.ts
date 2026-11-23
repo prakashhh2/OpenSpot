@@ -34,9 +34,10 @@ test.skip(
 test('each browser renders its own signed-in account', async ({ users }) => {
   const [a, b] = await users(2)
 
-  // /home is dynamic (under src/pages/(app)/), so it mounts the nav shell;
+  // /dashboard is protected dynamic (under src/pages/(app)/(protected)/), so
+  // signed-in contexts mount the nav shell and dashboard.
   // '/' is the static landing and has no navigation.
-  await Promise.all([a.page.goto('/home'), b.page.goto('/home')])
+  await Promise.all([a.page.goto('/dashboard'), b.page.goto('/dashboard')])
 
   // Email, not name. The page renders the *session's* `name || email`, while
   // `user.name` here comes from the LOCAL account registry — and the two are
@@ -48,6 +49,10 @@ test('each browser renders its own signed-in account', async ({ users }) => {
   // the contexts are not sharing one session.
   for (const user of [a, b]) {
     await expect(user.page.getByTestId('app-navigation')).toBeVisible({ timeout: 15_000 })
+    await expect(user.page.getByTestId('dashboard-page')).toBeVisible({ timeout: 15_000 })
+
+    await user.page.reload()
+    await expect(user.page.getByTestId('dashboard-page')).toBeVisible({ timeout: 15_000 })
 
     // The identity chip shows `name || email`. Its text is not predictable, but
     // its presence is: something must be there once the profile has loaded.
