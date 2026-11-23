@@ -28,7 +28,12 @@ function fakeTools(initial: Record<string, Row[]> = {}) {
       Object.assign(row.data, data)
       return { success: true as const, data: { recordId } }
     },
-    remove: async () => ({ success: true as const, data: { recordId: 'removed' } }),
+    remove: async (collection: string, recordId: string) => {
+      const index = rows[collection].findIndex((row) => row.recordId === recordId)
+      if (index < 0) return { success: false as const, error: 'missing' }
+      rows[collection].splice(index, 1)
+      return { success: true as const, data: { recordId } }
+    },
   }
   return tools
 }
@@ -86,5 +91,26 @@ describe('OpenSpot actions', () => {
     const tools = fakeTools({ team_members: [{ recordId: 'captain-row', data: { teamId: 'team-1', userId: 'captain', slot: 0, status: 'active' } }] })
     const result = await actions.sendMessage({ userId: 'outsider', params: { teamId: 'team-1', text: 'hello' }, tools: tools as never, env: {} as never, callerJwt: '' })
     expect(result).toEqual({ success: false, error: 'Only current team members can send messages.' })
+  })
+
+  it('lets the captain remove an active teammate and cancels their pending invite', async () => {
+    const tools = fakeTools({
+      teams: [team],
+      team_members: [
+        { recordId: 'captain-row', data: { teamId: 'team-1', userId: 'captain', slot: 0, status: 'active' } },
+        { recordId: 'builder-row', data: { teamId: 'team-1', userId: 'builder', slot: 1, status: 'active' } },
+      ],
+      invites: [invite],
+    })
+    const result = await actions.removeTeamMember({ userId: 'captain', params: { teamId: 'team-1', memberId: 'builder' }, tools: tools as never, env: {} as never, callerJwt: '' })
+    expect(result).toEqual({ success: true, data: { teamId: 'team-1', memberId: 'builder' } })
+    expect((await tools.query('team_members', { where: { teamId: 'team-1', userId: 'builder' } })).data.records).toHaveLength(0)
+    expect((await tools.query('invites', { where: { teamId: 'team-1', inviteeId: 'builder' } })).data.records[0].data.status).toBe('declined')
+  })
+
+  it('rejects member removal by a non-captain', async () => {
+    const tools = fakeTools({ teams: [team], team_members: [{ recordId: 'builder-row', data: { teamId: 'team-1', userId: 'builder', slot: 1, status: 'active' } }] })
+    const result = await actions.removeTeamMember({ userId: 'builder', params: { teamId: 'team-1', memberId: 'other' }, tools: tools as never, env: {} as never, callerJwt: '' })
+    expect(result).toEqual({ success: false, error: 'Only the team captain can remove members.' })
   })
 })
