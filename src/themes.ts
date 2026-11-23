@@ -19,8 +19,8 @@
 export const THEMES = [
   {
     id: 'slate',
-    label: 'Slate',
-    description: 'Neutral dark placeholder default. Replace with your own theme.',
+    label: 'Memphis',
+    description: 'Playful cream, cobalt, pink, cyan, and yellow OpenSpot theme.',
   },
   {
     id: 'paper',
