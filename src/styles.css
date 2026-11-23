@@ -172,6 +172,10 @@
     color: var(--color-foreground);
   }
 
+  h1, h2, h3, h4, button, a {
+    letter-spacing: -0.02em;
+  }
+
   /* Scrollbar styling */
   ::-webkit-scrollbar {
     width: 6px;
@@ -231,4 +235,203 @@
   a, button, [role="button"], input, select, textarea {
     touch-action: manipulation;
   }
+}
+
+/* OpenSpot's Memphis layer: playful geometry with accessible, high-contrast ink. */
+.memphis-page {
+  background-color: #f8f3ea;
+  background-image: radial-gradient(#ef668c 1.4px, transparent 1.4px);
+  background-size: 24px 24px;
+  color: #18253e;
+}
+
+.memphis-header {
+  border-bottom: 3px solid #18253e;
+  background: rgba(248, 243, 234, 0.88);
+  backdrop-filter: blur(10px);
+}
+
+.memphis-logo {
+  color: #18253e;
+  font-size: 1.35rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.memphis-hero {
+  position: relative;
+  isolation: isolate;
+}
+
+.memphis-hero::before {
+  position: absolute;
+  z-index: -1;
+  top: 7rem;
+  left: -4rem;
+  width: 12rem;
+  height: 4rem;
+  border: 4px solid #18253e;
+  background: #c9f0ee;
+  content: '';
+  transform: rotate(-12deg);
+}
+
+.memphis-heading {
+  color: #18253e;
+  font-weight: 950;
+  text-wrap: balance;
+}
+
+.memphis-kicker {
+  border: 3px solid #18253e;
+  background: #ffd469;
+  box-shadow: 4px 4px 0 #18253e;
+  color: #18253e;
+  font-weight: 800;
+}
+
+.memphis-button {
+  border: 3px solid #18253e;
+  box-shadow: 5px 5px 0 #18253e;
+  font-weight: 800;
+  transition: transform 140ms ease, box-shadow 140ms ease;
+}
+
+.memphis-button:hover {
+  box-shadow: 2px 2px 0 #18253e;
+  transform: translate(3px, 3px);
+}
+
+.memphis-outline-button {
+  border: 3px solid #18253e;
+  background: #fffdf8;
+  box-shadow: 4px 4px 0 #18253e;
+  color: #18253e;
+  font-weight: 800;
+}
+
+.memphis-preview {
+  position: relative;
+  isolation: isolate;
+  border: 4px solid #18253e;
+  background: #fffdf8;
+  box-shadow: 10px 10px 0 #18253e;
+}
+
+.memphis-preview::before,
+.memphis-preview::after {
+  position: absolute;
+  z-index: -1;
+  content: '';
+}
+
+.memphis-preview::before {
+  top: -2.25rem;
+  right: 3rem;
+  width: 4.5rem;
+  height: 4.5rem;
+  border: 4px solid #18253e;
+  border-radius: 999px;
+  background: #ef668c;
+}
+
+.memphis-preview::after {
+  bottom: -2rem;
+  left: -2rem;
+  width: 5rem;
+  height: 5rem;
+  border: 4px solid #18253e;
+  background: #ffd469;
+  transform: rotate(22deg);
+}
+
+.memphis-profile-card {
+  border: 3px solid #18253e;
+  background: #c9f0ee;
+  box-shadow: 6px 6px 0 #ef668c;
+}
+
+.memphis-motion-stage {
+  position: relative;
+  min-height: 360px;
+}
+
+.memphis-team-core {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 2;
+  width: min(72%, 300px);
+  border: 3px solid #18253e;
+  border-radius: 1rem;
+  background: #ffd469;
+  padding: 1rem;
+  box-shadow: 6px 6px 0 #18253e;
+  transform: translate(-50%, -50%) rotate(-2deg);
+}
+
+.memphis-member-card {
+  position: absolute;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  width: 9.5rem;
+  border: 3px solid #18253e;
+  border-radius: 0.9rem;
+  background: var(--member-color);
+  padding: 0.55rem;
+  box-shadow: 4px 4px 0 #18253e;
+  animation: memphis-float 4.8s ease-in-out infinite;
+}
+
+.memphis-member-card strong,
+.memphis-member-card small {
+  display: block;
+  color: #18253e;
+  line-height: 1.15;
+}
+
+.memphis-member-card strong { font-size: 0.73rem; font-weight: 900; }
+.memphis-member-card small { margin-top: 0.2rem; font-size: 0.62rem; font-weight: 700; opacity: 0.72; }
+.memphis-member-avatar { display: grid; width: 2rem; height: 2rem; flex: 0 0 auto; place-items: center; border: 2px solid #18253e; border-radius: 999px; background: #fffdf8; color: #18253e; font-size: 0.6rem; font-weight: 950; }
+.memphis-member-1 { top: 4%; left: 0; transform: rotate(-7deg); }
+.memphis-member-2 { top: 10%; right: 0; animation-delay: -1.4s; transform: rotate(6deg); }
+.memphis-member-3 { right: -1%; bottom: 4%; animation-delay: -2.8s; transform: rotate(-5deg); }
+.memphis-member-4 { bottom: 1%; left: 1%; animation-delay: -3.8s; transform: rotate(5deg); }
+
+@keyframes memphis-float {
+  0%, 100% { margin-top: 0; }
+  50% { margin-top: -12px; }
+}
+
+.memphis-team-card {
+  border: 3px solid #18253e;
+  background: #ffd469;
+}
+
+.memphis-step-section {
+  border-top: 3px solid #18253e;
+  border-bottom: 3px solid #18253e;
+  background: #ef668c;
+}
+
+.memphis-step-card {
+  border: 3px solid #18253e;
+  background: #fffdf8;
+  box-shadow: 6px 6px 0 #18253e;
+}
+
+.memphis-step-card:nth-child(2) { transform: rotate(1.5deg); }
+.memphis-step-card:nth-child(3) { transform: rotate(-1.5deg); }
+
+@media (max-width: 640px) {
+  .memphis-motion-stage { min-height: 420px; }
+  .memphis-team-core { width: 78%; }
+  .memphis-member-card { width: 8.6rem; }
+  .memphis-member-1 { top: 1%; left: -0.75rem; }
+  .memphis-member-2 { top: 16%; right: -0.75rem; }
+  .memphis-member-3 { right: -0.75rem; bottom: 1%; }
+  .memphis-member-4 { bottom: 6%; left: -0.75rem; }
 }
