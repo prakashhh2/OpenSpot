@@ -33,16 +33,20 @@ async function one<T extends Record<string, unknown>>(
 
 const saveProfile: ActionHandler<Env> = async ({ userId, params, tools }) => {
   const displayName = text(params.displayName, 40)
+  const university = text(params.university, 100)
+  const photoUrl = text(params.photoUrl, 1000)
   const bio = typeof params.bio === 'string' ? params.bio.trim().slice(0, 240) : ''
   const skills = selected(params.skills, skillSet, 5)
   const availability = selected(params.availability, availabilitySet, 4)
-  if (!displayName || !skills || !availability) {
-    return fail('Add a display name, at least one skill, and at least one availability window.')
+  if (!displayName || !university || !photoUrl || !skills || !availability) {
+    return fail('Add your name, university, profile photo, at least one skill, and at least one availability window.')
   }
 
   const data: Profile = {
     userId,
     displayName,
+    university,
+    photoUrl,
     skills: JSON.stringify(skills),
     availability: JSON.stringify(availability),
     bio,

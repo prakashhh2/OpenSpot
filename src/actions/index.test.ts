@@ -42,6 +42,18 @@ const team = { recordId: 'team-1', data: { name: 'Lake Effect', idea: 'A weather
 const invite = { recordId: 'invite-1', data: { teamId: 'team-1', captainId: 'captain', inviteeId: 'builder', participants: JSON.stringify(['captain', 'builder']), slot: 1, status: 'pending', createdAt: '2026-11-22T00:00:00.000Z' } }
 
 describe('OpenSpot actions', () => {
+  it('requires university and photo data when saving a profile', async () => {
+    const tools = fakeTools()
+    const result = await actions.saveProfile({
+      userId: 'builder',
+      params: { displayName: 'Builder', skills: ['React'], availability: ['Sunday'] },
+      tools: tools as never,
+      env: {} as never,
+      callerJwt: '',
+    })
+    expect(result).toEqual({ success: false, error: 'Add your name, university, profile photo, at least one skill, and at least one availability window.' })
+  })
+
   it('refuses invite acceptance by anyone except the intended recipient', async () => {
     const tools = fakeTools({ invites: [invite], teams: [team] })
     const result = await actions.respondToInvite({ userId: 'intruder', params: { inviteId: 'invite-1', decision: 'accept' }, tools: tools as never, env: {} as never, callerJwt: '' })

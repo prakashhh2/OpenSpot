@@ -10,6 +10,8 @@ export interface Profile {
   [key: string]: unknown
   userId: string
   displayName: string
+  university: string
+  photoUrl?: string
   skills: Skill[] | string
   availability: Availability[] | string
   bio: string

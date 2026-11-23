@@ -12,7 +12,9 @@ export const profilesSchema: CollectionSchema = {
   columns: [
     { name: 'userId', storage: 'text', interpretation: 'plain', userBound: true, immutable: true, required: true },
     { name: 'displayName', storage: 'text', interpretation: 'plain', required: true, maxLength: 40 },
-    { name: 'skills', storage: 'text', interpretation: { kind: 'multiselect', options: ['React', 'Python', 'Design', 'Product', 'Solana', 'AI'] } },
+    { name: 'university', storage: 'text', interpretation: 'plain', required: true, maxLength: 100 },
+    { name: 'photoUrl', storage: 'text', interpretation: 'plain', maxLength: 1000 },
+    { name: 'skills', storage: 'text', interpretation: { kind: 'multiselect', options: ['React', 'Python', 'Design', 'Product', 'Solana', 'AI', 'JavaScript', 'TypeScript', 'Node.js', 'Go', 'Rust', 'Docker', 'Kubernetes'] } },
     { name: 'availability', storage: 'text', interpretation: { kind: 'multiselect', options: ['Friday evening', 'Saturday morning', 'Saturday afternoon', 'Sunday'] } },
     { name: 'bio', storage: 'text', interpretation: 'plain', maxLength: 240 },
   ],
